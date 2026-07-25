@@ -1,0 +1,1233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>FODMAP Scanner</title>
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="FODMAP" />
+  <meta name="theme-color" content="#1D6B48" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --forest:       #1C3A2A;
+      --emerald:      #2D6A4F;
+      --emerald-mid:  #3D8B6A;
+      --emerald-dark: #1C3A2A;
+      --mustard:      #DAA520;
+      --burgundy:     #8E001A;
+      --green:   #27AE60;
+      --yellow:  #F1C40F;
+      --orange:  #E67E22;
+      --red:     #C0392B;
+      --bg:      #F0F2EC;
+      --cream:   #F9F9F5;
+      --card:    #FFFFFF;
+      --text:    #1A1A1A;
+      --muted:   #888888;
+      --border:  rgba(0,0,0,0.07);
+      --green-border: rgba(44,106,79,0.22);
+      --accent:  #2D6A4F;
+      --amber-glass:  rgba(218,165,32,0.12);
+      --amber-border: rgba(218,165,32,0.30);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .screen { display: none; flex-direction: column; min-height: 100vh; }
+    .screen.active { display: flex; }
+
+    header {
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 20px;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 10;
+    }
+    header h1 { font-size: 17px; font-weight: 700; color: var(--text); letter-spacing: -0.2px; }
+    .btn-icon {
+      background: none; border: none; cursor: pointer;
+      font-size: 18px; padding: 6px 8px; border-radius: 10px;
+      color: var(--text); font-weight: 600; font-family: inherit;
+      transition: background 0.15s;
+    }
+    .btn-icon:hover { background: var(--bg); }
+
+    /* ── HOME ── */
+    .home-body {
+      flex: 1; display: flex; flex-direction: column;
+      max-width: 480px; margin: 0 auto; width: 100%;
+    }
+
+    .home-hero {
+      background: #E8F3E8;
+      padding: 62px 26px 52px;
+      position: relative; overflow: hidden;
+      min-height: 280px;
+      border-bottom: 1px solid rgba(44,106,79,0.10);
+    }
+
+    /* Text layers sit above the emoji flatlay */
+    .hero-eyebrow {
+      font-size: 11px; font-weight: 500;
+      color: var(--forest); opacity: 0.55;
+      letter-spacing: 0.14em; text-transform: uppercase;
+      margin-bottom: 8px;
+      position: relative; z-index: 3;
+    }
+    .hero-title {
+      font-size: 52px; font-weight: 900;
+      color: var(--forest);
+      letter-spacing: -2px; line-height: 0.95;
+      margin-bottom: 14px;
+      position: relative; z-index: 3;
+    }
+    .hero-sub {
+      font-size: 14px; color: rgba(28,58,42,0.60);
+      line-height: 1.65; max-width: 195px;
+      position: relative; z-index: 3;
+    }
+    .hero-settings {
+      position: absolute; top: 16px; left: 20px;
+      background: rgba(28,58,42,0.08); border: 1px solid rgba(28,58,42,0.12);
+      border-radius: 12px; width: 36px; height: 36px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; font-size: 15px; transition: background 0.15s; z-index: 4;
+    }
+    .hero-settings:hover { background: rgba(28,58,42,0.15); }
+
+    /* Emoji flatlay — behind text (z-index 1) */
+    .hero-flatlay {
+      position: absolute; top: -10px; right: -10px; bottom: -10px;
+      width: 58%; pointer-events: none; z-index: 1;
+    }
+    .hero-flatlay span {
+      position: absolute; line-height: 1;
+      filter: drop-shadow(0 6px 18px rgba(0,0,0,0.18)) saturate(1.25) brightness(1.04);
+    }
+    .fl-1 { top: -4px;  right: 2px;   font-size: 96px; transform: rotate(-14deg); }
+    .fl-2 { top: 112px; right: 58px;  font-size: 82px; transform: rotate(10deg); }
+    .fl-3 { top: 8px;   right: 116px; font-size: 60px; transform: rotate(-7deg); opacity: 0.88; }
+    .fl-4 { top: 152px; right: 4px;   font-size: 70px; transform: rotate(18deg); }
+    .fl-5 { top: 238px; right: 138px; font-size: 46px; transform: rotate(12deg); opacity: 0.85; }
+    .fl-6 { top: 200px; right: 52px;  font-size: 64px; transform: rotate(6deg); }
+    /* carrot moved into the right emoji cluster, clear of text */
+    .fl-7 { top: 244px; right: 112px; font-size: 36px; transform: rotate(-8deg); opacity: 0.65; }
+    .fl-8 { top: 44px;  right: 176px; font-size: 38px; transform: rotate(22deg); opacity: 0.70; }
+
+    /* ── HOME CONTENT ── */
+    .home-content {
+      padding: 28px 18px 0;
+      background: var(--bg);
+    }
+    .scan-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .scan-card {
+      background: var(--card); border-radius: 20px;
+      padding: 28px 16px 24px; text-align: center; cursor: pointer;
+      transition: transform 0.18s, box-shadow 0.18s;
+      display: flex; flex-direction: column; align-items: center; gap: 14px;
+      box-shadow: 0 8px 36px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04);
+      border: 1px solid rgba(0,0,0,0.03);
+    }
+    .scan-card:hover  { transform: translateY(-4px); box-shadow: 0 16px 48px rgba(0,0,0,0.12); }
+    .scan-card:active { transform: translateY(0); box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
+    .scan-card .icon-ring {
+      width: 72px; height: 72px; border-radius: 20px;
+      background: #E0EEE6;
+      display: flex; align-items: center; justify-content: center; font-size: 36px;
+    }
+    .scan-card-describe .icon-ring { background: rgba(218,165,32,0.10); }
+    .scan-card h3 { font-size: 15px; font-weight: 700; color: var(--text); letter-spacing: -0.2px; }
+    .scan-card p  { font-size: 12px; color: var(--muted); line-height: 1.45; }
+
+    /* Safe foods card */
+    .safe-foods-card {
+      background: var(--forest); border-radius: 20px; padding: 18px 20px;
+      display: flex; align-items: center; gap: 14px; cursor: pointer;
+      margin-top: 14px; transition: opacity 0.15s;
+    }
+    .safe-foods-card:hover { opacity: 0.88; }
+    .safe-foods-card .sfc-icon  { font-size: 30px; }
+    .safe-foods-card .sfc-title { font-size: 15px; font-weight: 700; color: white; }
+    .safe-foods-card .sfc-sub   { font-size: 12px; color: rgba(255,255,255,0.62); margin-top: 2px; }
+    .safe-foods-card .sfc-arrow { font-size: 20px; color: rgba(255,255,255,0.50); margin-left: auto; }
+
+    /* ── RECENT SCANS — own card ── */
+    .recent-section {
+      background: var(--bg);
+      padding: 20px 18px 36px;
+      flex: 1;
+    }
+    .recent-card {
+      background: var(--card);
+      border-radius: 22px;
+      overflow: hidden;
+      border: 1px solid rgba(0,0,0,0.05);
+      box-shadow: 0 2px 14px rgba(0,0,0,0.06);
+    }
+    .recent-card-header {
+      padding: 14px 18px 13px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .recent-card-icon {
+      width: 32px; height: 32px; border-radius: 10px;
+      background: #E8F3E8;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; flex-shrink: 0;
+    }
+    .section-title {
+      font-size: 15px; font-weight: 800;
+      color: var(--text); letter-spacing: -0.3px; flex: 1;
+    }
+
+    .history-list { display: flex; flex-direction: column; }
+    .history-item {
+      padding: 13px 18px;
+      display: flex; align-items: center; gap: 14px; cursor: pointer;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.12s;
+    }
+    .history-item:last-child { border-bottom: none; }
+    .history-item:hover { background: var(--bg); }
+
+    .score-badge {
+      width: 44px; height: 44px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 800; color: white; flex-shrink: 0;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.22);
+    }
+    .score-low  { background: var(--emerald); }
+    .score-mid  { background: var(--mustard); }
+    .score-high { background: var(--burgundy); }
+
+    .history-info { flex: 1; min-width: 0; }
+    .history-name { font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text); }
+    .history-meta { font-size: 12px; color: var(--muted); margin-top: 3px; }
+
+    .empty-state { text-align: center; padding: 32px 16px; color: var(--muted); }
+    .empty-state .icon { font-size: 38px; margin-bottom: 10px; opacity: 0.45; }
+    .empty-state p { font-size: 14px; }
+
+    .home-footer {
+      background: var(--forest); padding: 22px 26px;
+      display: flex; justify-content: space-around; align-items: center;
+    }
+    .home-footer button {
+      font-size: 12px; color: rgba(249,249,245,0.62);
+      background: none; border: none; cursor: pointer;
+      font-family: inherit; padding: 4px 0; transition: color 0.15s;
+    }
+    .home-footer button:hover { color: #F9F9F5; }
+
+    /* ── BUTTONS ── */
+    .btn {
+      background: var(--emerald); color: white; border: none;
+      border-radius: 16px; padding: 16px 24px;
+      font-size: 15px; font-weight: 600; cursor: pointer;
+      transition: opacity 0.15s, transform 0.15s, box-shadow 0.15s;
+      width: 100%; max-width: 400px;
+      font-family: inherit; letter-spacing: -0.1px;
+      box-shadow: 0 4px 16px rgba(45,106,79,0.28);
+    }
+    .btn:hover { opacity: 0.88; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(45,106,79,0.32); }
+    .btn:disabled { opacity: 0.38; cursor: not-allowed; transform: none; box-shadow: none; }
+    .btn-secondary {
+      background: var(--card); color: var(--text);
+      border: 1.5px solid rgba(0,0,0,0.10);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+    }
+    .btn-secondary:hover { background: #f0f0ee; }
+
+    /* ── PHOTO / DESCRIBE ── */
+    .photo-body {
+      flex: 1; display: flex; flex-direction: column; align-items: center;
+      padding: 22px; gap: 16px;
+      max-width: 480px; margin: 0 auto; width: 100%;
+    }
+    .photo-preview {
+      width: 100%; max-width: 400px; aspect-ratio: 4/3;
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 22px; overflow: hidden;
+      display: flex; align-items: center; justify-content: center; position: relative;
+    }
+    .photo-preview img { width: 100%; height: 100%; object-fit: cover; display: none; }
+    .photo-preview .placeholder { text-align: center; color: var(--muted); }
+    .photo-preview .placeholder .icon { font-size: 44px; margin-bottom: 8px; opacity: 0.4; }
+    .file-input-label {
+      width: 100%; max-width: 400px; background: var(--card);
+      border: 1.5px dashed rgba(45,106,79,0.45); border-radius: 16px; padding: 18px;
+      text-align: center; cursor: pointer; transition: border-color 0.15s, background 0.15s;
+      font-size: 14px; color: var(--muted); font-family: inherit;
+    }
+    .file-input-label:hover { border-color: var(--emerald); background: rgba(45,106,79,0.04); color: var(--emerald); }
+    #file-input { display: none; }
+
+    /* ── LOADING ── */
+    .loading-overlay {
+      position: fixed; inset: 0; background: rgba(240,242,236,0.92);
+      display: none; flex-direction: column; align-items: center; justify-content: center;
+      z-index: 100; gap: 16px;
+    }
+    .loading-overlay.active { display: flex; }
+    .spinner {
+      width: 46px; height: 46px; border: 3px solid rgba(0,0,0,0.08);
+      border-top-color: var(--emerald); border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { font-size: 16px; font-weight: 600; color: var(--text); }
+    .loading-sub  { font-size: 13px; color: var(--muted); }
+
+    /* ── RESULTS ── */
+    .results-body {
+      flex: 1; padding: 18px; display: flex; flex-direction: column; gap: 14px;
+      max-width: 480px; margin: 0 auto; width: 100%;
+    }
+    .result-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 22px; padding: 22px; box-shadow: 0 2px 14px rgba(0,0,0,0.05);
+    }
+    .score-section { text-align: center; padding: 22px 20px; }
+    .score-circle {
+      width: 152px; height: 152px; border-radius: 50%; margin: 0 auto 16px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      background: white; box-shadow: 0 6px 24px rgba(0,0,0,0.10);
+    }
+    .score-circle-low  { border: 7px solid var(--green); }
+    .score-circle-mid  { border: 7px solid var(--yellow); }
+    .score-circle-high { border: 7px solid var(--red); }
+    .score-number { font-size: 54px; font-weight: 800; color: var(--text); line-height: 1; }
+    .score-label  { font-size: 12px; color: var(--muted); font-weight: 500; margin-top: 2px; }
+    .score-verdict { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+    .score-verdict.safe    { color: var(--green); }
+    .score-verdict.caution { color: var(--yellow); }
+    .score-verdict.danger  { color: var(--red); }
+    .food-name  { font-size: 22px; font-weight: 800; text-align: center; margin-bottom: 4px; color: var(--text); letter-spacing: -0.4px; }
+    .food-brand { font-size: 14px; color: var(--muted); text-align: center; }
+    .gauge-bar {
+      height: 10px; border-radius: 5px;
+      background: linear-gradient(to right, var(--green), var(--yellow), var(--orange), var(--red));
+      position: relative; margin: 14px 0 20px;
+    }
+    .gauge-needle {
+      position: absolute; top: 50%; transform: translate(-50%, -50%);
+      width: 20px; height: 20px; background: white; border: 3px solid var(--text); border-radius: 50%;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.20);
+      transition: left 0.6s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    .gauge-labels {
+      display: flex; justify-content: space-between;
+      font-size: 11px; color: var(--muted); font-weight: 600; letter-spacing: 0.02em;
+    }
+    .fodmap-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+    .fodmap-tag {
+      padding: 9px 12px; border-radius: 12px;
+      font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 6px;
+    }
+    .fodmap-tag.present { background: rgba(192,57,43,0.10); color: #C0392B; border: 1px solid rgba(192,57,43,0.28); }
+    .fodmap-tag.absent  { background: rgba(39,174,96,0.10);  color: #1E8449; border: 1px solid rgba(39,174,96,0.28); }
+    .card-title {
+      font-size: 11px; font-weight: 700; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.09em; margin-bottom: 14px;
+    }
+    .sibo-advice      { font-size: 14px; line-height: 1.75; color: var(--text); }
+    .serving-note {
+      background: var(--amber-glass); border: 1px solid var(--amber-border);
+      border-radius: 16px; padding: 14px 16px; font-size: 13px; color: #7a5210; line-height: 1.55;
+    }
+    .swap-item { display: flex; align-items: flex-start; gap: 12px; padding: 13px 0; border-bottom: 1px solid var(--border); }
+    .swap-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .swap-arrow { font-size: 18px; flex-shrink: 0; margin-top: 2px; }
+    .swap-text { flex: 1; }
+    .swap-from   { font-size: 13px; color: var(--red); font-weight: 700; text-decoration: line-through; }
+    .swap-to     { font-size: 14px; font-weight: 700; color: var(--green); margin: 3px 0; }
+    .swap-reason { font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+    /* ── SETTINGS ── */
+    .settings-body {
+      flex: 1; padding: 22px 18px; max-width: 480px; margin: 0 auto; width: 100%;
+      display: flex; flex-direction: column; gap: 14px;
+    }
+    .settings-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 22px; padding: 22px;
+      display: flex; flex-direction: column; gap: 14px; box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+    }
+    label { font-size: 14px; font-weight: 600; color: var(--text); }
+    .input-hint { font-size: 12px; color: var(--muted); margin-top: -8px; }
+    input[type="password"], input[type="text"] {
+      width: 100%; padding: 12px 14px; border: 1.5px solid rgba(0,0,0,0.10);
+      border-radius: 12px; font-size: 14px; background: var(--bg);
+      transition: border-color 0.15s; font-family: inherit; color: var(--text);
+    }
+    input:focus { outline: none; border-color: var(--emerald); }
+    .api-key-row { display: flex; gap: 8px; }
+    .api-key-row input { flex: 1; }
+    .btn-sm { padding: 11px 16px; font-size: 13px; width: auto; }
+    .status-msg { font-size: 13px; padding: 10px 14px; border-radius: 10px; display: none; }
+    .status-msg.success { background: rgba(45,106,79,0.08); color: #1C3A2A; border: 1px solid rgba(45,106,79,0.20); display: block; }
+    .status-msg.error   { background: rgba(142,0,26,0.08); color: #8E001A; border: 1px solid rgba(142,0,26,0.20); display: block; }
+    .info-box {
+      background: rgba(45,106,79,0.05); border: 1px solid rgba(45,106,79,0.14);
+      border-radius: 12px; padding: 14px; font-size: 13px; color: var(--muted); line-height: 1.65;
+    }
+
+    /* ── CLARIFY ── */
+    .clarify-body {
+      flex: 1; padding: 18px; display: flex; flex-direction: column; gap: 14px;
+      max-width: 480px; margin: 0 auto; width: 100%;
+    }
+    .clarify-intro { font-size: 14px; color: var(--muted); line-height: 1.6; }
+    .clarify-question {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 22px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+    }
+    .clarify-question h3 { font-size: 15px; font-weight: 700; margin-bottom: 13px; line-height: 1.4; color: var(--text); }
+    .clarify-options { display: flex; flex-direction: column; gap: 8px; }
+    .clarify-option {
+      padding: 12px 14px; border: 1.5px solid rgba(0,0,0,0.08); border-radius: 12px; font-size: 14px;
+      cursor: pointer; background: var(--bg); text-align: left; transition: all 0.15s; font-family: inherit; color: var(--text);
+    }
+    .clarify-option:hover    { border-color: var(--emerald); background: rgba(45,106,79,0.05); }
+    .clarify-option.selected { border-color: var(--emerald); background: rgba(45,106,79,0.08); color: var(--emerald-dark); font-weight: 600; }
+
+    @media (max-width: 360px) { .scan-card { padding: 20px 10px 18px; } .hero-title { font-size: 44px; } }
+
+    /* ── CHAT ── */
+    .chat-body { flex: 1; display: flex; flex-direction: column; max-width: 480px; margin: 0 auto; width: 100%; overflow: hidden; }
+    .chat-messages { flex: 1; overflow-y: auto; padding: 18px 16px 8px; display: flex; flex-direction: column; gap: 10px; scroll-behavior: smooth; }
+    .chat-bubble { max-width: 84%; padding: 12px 15px; font-size: 14px; line-height: 1.6; word-break: break-word; }
+    .chat-bubble.user { background: var(--emerald); color: white; border-radius: 18px 18px 4px 18px; align-self: flex-end; }
+    .chat-bubble.bot  { background: var(--card); color: var(--text); border: 1px solid var(--border); border-radius: 18px 18px 18px 4px; align-self: flex-start; box-shadow: 0 1px 6px rgba(0,0,0,0.05); }
+    .chat-bubble.typing { color: var(--muted); font-style: italic; }
+    .chat-suggestions { display: flex; flex-wrap: wrap; gap: 8px; padding: 4px 16px 14px; }
+    .chat-chip { background: var(--card); border: 1px solid var(--green-border); border-radius: 20px; padding: 8px 14px; font-size: 12px; color: var(--forest); cursor: pointer; font-family: inherit; transition: background 0.15s, border-color 0.15s; }
+    .chat-chip:hover { background: rgba(44,106,79,0.08); border-color: var(--emerald); }
+    .chat-input-row { display: flex; align-items: flex-end; gap: 10px; padding: 12px 16px 28px; border-top: 1px solid var(--border); background: var(--card); }
+    .chat-input { flex: 1; padding: 12px 14px; border: 1.5px solid rgba(0,0,0,0.10); border-radius: 22px; font-size: 14px; font-family: inherit; background: var(--bg); color: var(--text); resize: none; line-height: 1.4; max-height: 100px; overflow-y: auto; transition: border-color 0.15s; }
+    .chat-input:focus { outline: none; border-color: var(--emerald); }
+    .chat-send { width: 44px; height: 44px; border-radius: 50%; background: var(--emerald); color: white; border: none; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700; transition: opacity 0.15s, transform 0.15s; box-shadow: 0 3px 10px rgba(45,106,79,0.30); }
+    .chat-send:hover { opacity: 0.85; transform: scale(1.06); }
+    .chat-send:disabled { opacity: 0.35; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    /* ── SAFE FOODS ── */
+    .foods-body { flex: 1; display: flex; flex-direction: column; max-width: 480px; margin: 0 auto; width: 100%; overflow: hidden; }
+    .foods-toolbar { background: var(--card); border-bottom: 1px solid var(--border); display: flex; flex-direction: column; }
+    .foods-search-row { display: flex; align-items: center; gap: 8px; padding: 12px 16px 10px; }
+    .foods-search { flex: 1; padding: 10px 14px; border: 1.5px solid rgba(0,0,0,0.10); border-radius: 12px; font-size: 14px; font-family: inherit; background: var(--bg); color: var(--text); transition: border-color 0.15s; }
+    .foods-search:focus { outline: none; border-color: var(--emerald); }
+    .food-cat-nav { display: flex; gap: 8px; overflow-x: auto; padding: 2px 16px 12px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+    .food-cat-nav::-webkit-scrollbar { display: none; }
+    .cat-tab { display: flex; flex-direction: column; align-items: center; gap: 5px; background: none; border: none; cursor: pointer; flex-shrink: 0; padding: 0; }
+    .cat-tab-icon { width: 56px; height: 56px; border-radius: 16px; font-size: 28px; display: flex; align-items: center; justify-content: center; border: 2.5px solid transparent; transition: all 0.15s; }
+    .cat-tab.active .cat-tab-icon { border-color: var(--emerald); }
+    .cat-tab-label { font-size: 10px; font-weight: 600; color: var(--muted); font-family: inherit; white-space: nowrap; }
+    .cat-tab.active .cat-tab-label { color: var(--forest); font-weight: 700; }
+    .foods-filter { display: flex; gap: 7px; padding: 0 16px 12px; }
+    .filter-btn { flex: 1; padding: 8px 10px; border-radius: 10px; font-size: 12px; font-weight: 600; font-family: inherit; border: 1.5px solid rgba(0,0,0,0.10); background: var(--bg); color: var(--muted); cursor: pointer; transition: all 0.15s; }
+    .filter-btn.active.all   { background: var(--forest); color: white; border-color: var(--forest); }
+    .filter-btn.active.safe  { background: var(--green);  color: white; border-color: var(--green); }
+    .filter-btn.active.avoid { background: var(--red);    color: white; border-color: var(--red); }
+    .filter-btn:not(.active):hover { border-color: var(--emerald); color: var(--emerald); }
+    .foods-list { flex: 1; overflow-y: auto; padding: 14px 16px 60px; display: flex; flex-direction: column; gap: 12px; }
+    .food-category { background: var(--card); border-radius: 20px; overflow: hidden; border: 1px solid rgba(0,0,0,0.04); box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+    .food-category-header { padding: 14px 16px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--border); }
+    .food-cat-icon-box { width: 40px; height: 40px; border-radius: 12px; font-size: 22px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .food-cat-name  { font-size: 15px; font-weight: 700; color: var(--text); }
+    .food-cat-count { font-size: 12px; color: var(--muted); margin-left: auto; }
+    .food-groups { padding: 12px 16px 14px; display: flex; flex-direction: column; gap: 12px; }
+    .food-group-label { font-size: 10px; font-weight: 700; letter-spacing: 0.10em; text-transform: uppercase; margin-bottom: 7px; }
+    .food-group-label.safe  { color: var(--green); }
+    .food-group-label.avoid { color: var(--red); }
+    .food-pills { display: flex; flex-wrap: wrap; gap: 6px; }
+    .food-pill { padding: 5px 11px; border-radius: 20px; font-size: 12px; font-weight: 500; line-height: 1.3; }
+    .food-pill.safe  { background: rgba(39,174,96,0.10);  color: #1E8449; border: 1px solid rgba(39,174,96,0.25); }
+    .food-pill.avoid { background: rgba(192,57,43,0.09);  color: #C0392B; border: 1px solid rgba(192,57,43,0.22); }
+
+    /* ── CONFIRM FOOD SCREEN ── */
+    .confirm-body {
+      flex: 1; display: flex; flex-direction: column; align-items: center;
+      padding: 32px 22px; gap: 16px;
+      max-width: 480px; margin: 0 auto; width: 100%;
+    }
+    .confirm-card {
+      background: var(--card); border-radius: 26px; padding: 36px 28px;
+      text-align: center; width: 100%;
+      box-shadow: 0 4px 28px rgba(0,0,0,0.08); border: 1px solid var(--border);
+    }
+    .confirm-emoji { font-size: 52px; margin-bottom: 18px; line-height: 1; }
+    .confirm-label { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.10em; margin-bottom: 12px; }
+    .confirm-food-name { font-size: 30px; font-weight: 800; color: var(--text); letter-spacing: -0.6px; line-height: 1.15; margin-bottom: 6px; }
+    .confirm-sub { font-size: 14px; color: var(--muted); line-height: 1.5; }
+    .confirm-edit-box {
+      width: 100%; background: var(--card); border-radius: 20px; padding: 20px;
+      border: 1px solid var(--border); box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    .confirm-edit-label { font-size: 13px; font-weight: 600; color: var(--text); }
+
+    /* ── FAB ── */
+    .chat-fab { position: fixed; bottom: 28px; right: 20px; z-index: 50; background: var(--emerald); color: white; border: none; cursor: pointer; border-radius: 30px; padding: 14px 20px; display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; font-family: inherit; box-shadow: 0 6px 24px rgba(45,106,79,0.45); transition: transform 0.18s, box-shadow 0.18s; }
+    .chat-fab:hover  { transform: translateY(-2px) scale(1.04); box-shadow: 0 10px 32px rgba(45,106,79,0.55); }
+    .chat-fab:active { transform: scale(0.97); }
+    .chat-fab .fab-icon { font-size: 20px; line-height: 1; }
+  </style>
+</head>
+<body>
+
+<button class="chat-fab" id="chat-fab" onclick="showScreen('chat')">
+  <span class="fab-icon">💬</span> Ask AI
+</button>
+
+<div class="loading-overlay" id="loading">
+  <div class="spinner"></div>
+  <div class="loading-text" id="loading-text">Analyzing food...</div>
+  <div class="loading-sub"  id="loading-sub">This may take a few seconds</div>
+</div>
+
+<!-- ══════════ HOME ══════════ -->
+<div class="screen active" id="screen-home">
+  <div class="home-body">
+    <div class="home-hero">
+      <div class="hero-eyebrow">Gut Health</div>
+      <div class="hero-title">FODMAP<br>Scanner</div>
+      <div class="hero-sub">Find out if your meal is safe for your gut — instantly.</div>
+      <div class="hero-flatlay">
+        <span class="fl-1">🥦</span>
+        <span class="fl-2">🥑</span>
+        <span class="fl-3">🍃</span>
+        <span class="fl-4">🍋</span>
+        <span class="fl-5">🫑</span>
+        <span class="fl-6">🍅</span>
+        <span class="fl-7">🥕</span>
+        <span class="fl-8">🧅</span>
+      </div>
+      <button class="hero-settings" onclick="showScreen('settings')" title="Settings">⚙️</button>
+    </div>
+
+    <div class="home-content">
+      <div class="scan-cards">
+        <div class="scan-card scan-card-photo" onclick="showScreen('photo')">
+          <div class="icon-ring">📸</div>
+          <h3>Photo Meal</h3>
+          <p>Take or upload a photo of your food</p>
+        </div>
+        <div class="scan-card scan-card-describe" onclick="showScreen('describe')">
+          <div class="icon-ring">🎙️</div>
+          <h3>Describe Meal</h3>
+          <p>Type or speak what you're eating</p>
+        </div>
+      </div>
+      <div class="safe-foods-card" onclick="showScreen('foods')">
+        <span class="sfc-icon">🥗</span>
+        <div>
+          <div class="sfc-title">Safe Foods Guide</div>
+          <div class="sfc-sub">Quick reference for low-FODMAP eating</div>
+        </div>
+        <span class="sfc-arrow">→</span>
+      </div>
+    </div>
+
+    <div class="recent-section">
+      <div class="recent-card">
+        <div class="recent-card-header">
+          <div class="recent-card-icon">🔍</div>
+          <span class="section-title">Recent Scans</span>
+        </div>
+        <div class="history-list" id="history-list">
+          <div class="empty-state">
+            <div class="icon">🍽️</div>
+            <p>No scans yet. Start by photographing a meal.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="home-footer">
+      <button onclick="showScreen('settings')">⚙ Settings</button>
+      <button onclick="alert('FODMAPs are fermentable carbs that may cause bloating and discomfort in people with IBS or SIBO.')">About your gut</button>
+    </footer>
+  </div>
+</div>
+
+<!-- ══════════ SAFE FOODS ══════════ -->
+<div class="screen" id="screen-foods">
+  <header>
+    <button class="btn-icon" onclick="showScreen('home')">← Back</button>
+    <h1>Safe Foods Guide</h1>
+    <span></span>
+  </header>
+  <div class="foods-body">
+    <div class="foods-toolbar">
+      <div class="foods-search-row">
+        <input type="text" class="foods-search" id="foods-search" placeholder="🔍  Search any food…" oninput="onFoodsSearch(this.value)" />
+      </div>
+      <div class="food-cat-nav" id="food-cat-nav">
+        <button class="cat-tab active" data-cat="all"         onclick="selectFoodCat('all')">        <div class="cat-tab-icon" style="background:#F0F2EC">🍽️</div><div class="cat-tab-label">All</div></button>
+        <button class="cat-tab"        data-cat="vegetables"  onclick="selectFoodCat('vegetables')"> <div class="cat-tab-icon" style="background:#E8F3E8">🥦</div><div class="cat-tab-label">Veg</div></button>
+        <button class="cat-tab"        data-cat="fruits"      onclick="selectFoodCat('fruits')">     <div class="cat-tab-icon" style="background:#FDEAEA">🍓</div><div class="cat-tab-label">Fruits</div></button>
+        <button class="cat-tab"        data-cat="grains"      onclick="selectFoodCat('grains')">     <div class="cat-tab-icon" style="background:#FDF3E3">🌾</div><div class="cat-tab-label">Grains</div></button>
+        <button class="cat-tab"        data-cat="proteins"    onclick="selectFoodCat('proteins')">   <div class="cat-tab-icon" style="background:#FAE9E6">🥩</div><div class="cat-tab-label">Protein</div></button>
+        <button class="cat-tab"        data-cat="dairy"       onclick="selectFoodCat('dairy')">      <div class="cat-tab-icon" style="background:#E8F0F8">🥛</div><div class="cat-tab-label">Dairy</div></button>
+        <button class="cat-tab"        data-cat="nuts"        onclick="selectFoodCat('nuts')">       <div class="cat-tab-icon" style="background:#F5EDE3">🥜</div><div class="cat-tab-label">Nuts</div></button>
+        <button class="cat-tab"        data-cat="sweeteners"  onclick="selectFoodCat('sweeteners')"> <div class="cat-tab-icon" style="background:#FDF8E3">🍯</div><div class="cat-tab-label">Sugars</div></button>
+        <button class="cat-tab"        data-cat="desserts"    onclick="selectFoodCat('desserts')">   <div class="cat-tab-icon" style="background:#FDE8F0">🍫</div><div class="cat-tab-label">Desserts</div></button>
+        <button class="cat-tab"        data-cat="condiments"  onclick="selectFoodCat('condiments')"> <div class="cat-tab-icon" style="background:#EBF0E8">🫙</div><div class="cat-tab-label">Sauces</div></button>
+        <button class="cat-tab"        data-cat="drinks"      onclick="selectFoodCat('drinks')">     <div class="cat-tab-icon" style="background:#E3F5F5">🫖</div><div class="cat-tab-label">Drinks</div></button>
+      </div>
+      <div class="foods-filter">
+        <button class="filter-btn active all" id="filter-all"   onclick="setFoodFilter('all')">All foods</button>
+        <button class="filter-btn safe"       id="filter-safe"  onclick="setFoodFilter('safe')">✓ Safe only</button>
+        <button class="filter-btn avoid"      id="filter-avoid" onclick="setFoodFilter('avoid')">✗ Avoid only</button>
+      </div>
+    </div>
+    <div class="foods-list" id="foods-list"></div>
+  </div>
+</div>
+
+<!-- ══════════ PHOTO ══════════ -->
+<div class="screen" id="screen-photo">
+  <header>
+    <button class="btn-icon" onclick="showScreen('home')">← Back</button>
+    <h1>Photo Meal</h1>
+    <span></span>
+  </header>
+  <div class="photo-body">
+    <div class="photo-preview" id="photo-preview">
+      <img id="photo-img" alt="Selected food" />
+      <div class="placeholder" id="photo-placeholder">
+        <div class="icon">📸</div>
+        <p style="font-size:14px;color:var(--muted)">No photo selected</p>
+      </div>
+    </div>
+    <label class="file-input-label" for="file-input">📁 Choose photo or take a picture</label>
+    <input type="file" id="file-input" accept="image/*" onchange="handlePhotoSelected(event)" />
+    <div id="photo-error" style="display:none;background:rgba(122,27,46,0.07);border:1px solid rgba(122,27,46,0.22);border-radius:10px;padding:12px;font-size:13px;color:#7A1B2E;width:100%;max-width:400px;text-align:center"></div>
+    <button class="btn" id="analyze-btn" onclick="analyzePhoto()" disabled>Analyze FODMAP Score</button>
+    <button class="btn btn-secondary" onclick="showScreen('home')">Cancel</button>
+  </div>
+</div>
+
+<!-- ══════════ DESCRIBE ══════════ -->
+<div class="screen" id="screen-describe">
+  <header>
+    <button class="btn-icon" onclick="showScreen('home')">← Back</button>
+    <h1>Describe Meal</h1>
+    <span></span>
+  </header>
+  <div class="photo-body">
+    <p style="font-size:14px;color:var(--muted);text-align:center;line-height:1.6">
+      Type what you're eating, or tap the mic to speak it.
+    </p>
+    <div style="width:100%;max-width:400px;position:relative">
+      <textarea id="describe-input" placeholder="e.g. grilled salmon with rice and steamed broccoli, with a side of yoghurt..."
+        style="width:100%;min-height:140px;padding:14px 50px 14px 14px;border:1px solid var(--border);border-radius:12px;font-size:15px;font-family:inherit;background:var(--card);resize:none;line-height:1.6"
+        oninput="document.getElementById('describe-btn').disabled=!this.value.trim()"></textarea>
+      <button id="mic-btn" onclick="toggleVoice()" title="Speak"
+        style="position:absolute;bottom:12px;right:12px;background:none;border:none;font-size:26px;cursor:pointer;line-height:1;padding:2px">🎙️</button>
+    </div>
+    <div id="voice-status" style="display:none;font-size:13px;color:var(--accent);font-weight:500;text-align:center">🔴 Listening... tap mic to stop</div>
+    <div id="describe-error" style="display:none;background:rgba(122,27,46,0.07);border:1px solid rgba(122,27,46,0.22);border-radius:10px;padding:12px;font-size:13px;color:#7A1B2E;width:100%;max-width:400px;text-align:center"></div>
+    <button class="btn" id="describe-btn" onclick="describeMeal()" disabled>Analyze FODMAP Score</button>
+    <button class="btn btn-secondary" onclick="stopVoice(); showScreen('home')">Cancel</button>
+  </div>
+</div>
+
+<!-- ══════════ CONFIRM FOOD ══════════ -->
+<div class="screen" id="screen-confirm">
+  <header>
+    <button class="btn-icon" onclick="showScreen('home')">← Back</button>
+    <h1>Confirm Food</h1>
+    <span></span>
+  </header>
+  <div class="confirm-body">
+    <div class="confirm-card">
+      <div class="confirm-emoji" id="confirm-emoji">🍽️</div>
+      <div class="confirm-label">We think this is</div>
+      <div class="confirm-food-name" id="confirm-food-name">—</div>
+      <div class="confirm-sub" style="margin-top:8px">Does that look right?</div>
+    </div>
+
+    <div class="confirm-edit-box" id="confirm-edit-box" style="display:none">
+      <div class="confirm-edit-label">✏️ What is it actually?</div>
+      <input type="text" id="confirm-edit-input" placeholder="e.g. polenta, chicken stir fry…"
+        onkeydown="if(event.key==='Enter') reanalyzeWithCorrection()" />
+      <button class="btn" onclick="reanalyzeWithCorrection()">Re-analyze with correction</button>
+    </div>
+
+    <div id="confirm-error" style="display:none;background:rgba(122,27,46,0.07);border:1px solid rgba(122,27,46,0.22);border-radius:10px;padding:12px;font-size:13px;color:#7A1B2E;width:100%;text-align:center"></div>
+
+    <button class="btn" id="confirm-yes-btn" onclick="confirmFoodCorrect()">✓ Yes, score it!</button>
+    <button class="btn btn-secondary" id="confirm-edit-btn" onclick="showEditFoodName()">✏️ That's not right — edit</button>
+  </div>
+</div>
+
+<!-- ══════════ CLARIFY ══════════ -->
+<div class="screen" id="screen-clarify">
+  <header>
+    <button class="btn-icon" onclick="showScreen('home')">← Back</button>
+    <h1>A Few Questions</h1>
+    <span></span>
+  </header>
+  <div class="clarify-body" id="clarify-body"></div>
+</div>
+
+<!-- ══════════ RESULTS ══════════ -->
+<div class="screen" id="screen-results">
+  <header>
+    <button class="btn-icon" onclick="showScreen('home')">← Back</button>
+    <h1>FODMAP Results</h1>
+    <span></span>
+  </header>
+  <div class="results-body" id="results-body"></div>
+</div>
+
+<!-- ══════════ CHAT ══════════ -->
+<div class="screen" id="screen-chat">
+  <header>
+    <button class="btn-icon" onclick="showScreen('home')">← Back</button>
+    <h1>Ask FODMAP</h1>
+    <span></span>
+  </header>
+  <div class="chat-body">
+    <div class="chat-messages" id="chat-messages"></div>
+    <div class="chat-suggestions" id="chat-suggestions">
+      <button class="chat-chip" onclick="sendChatChip(this)">Is avocado low FODMAP?</button>
+      <button class="chat-chip" onclick="sendChatChip(this)">Breakfast ideas for IBS</button>
+      <button class="chat-chip" onclick="sendChatChip(this)">Foods to avoid with SIBO</button>
+      <button class="chat-chip" onclick="sendChatChip(this)">Safe snack ideas</button>
+      <button class="chat-chip" onclick="sendChatChip(this)">Can I eat garlic?</button>
+    </div>
+    <div class="chat-input-row">
+      <textarea class="chat-input" id="chat-input" placeholder="Ask about foods, symptoms, meal ideas…" rows="1"
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChatMessage()}"
+        oninput="autoResizeChatInput(this)"></textarea>
+      <button class="chat-send" id="chat-send-btn" onclick="sendChatMessage()">↑</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ SETTINGS ══════════ -->
+<div class="screen" id="screen-settings">
+  <header>
+    <button class="btn-icon" onclick="showScreen('home')">← Back</button>
+    <h1>Settings</h1>
+    <span></span>
+  </header>
+  <div class="settings-body">
+    <div class="settings-card">
+      <label for="api-key-input">Google Gemini API Key (Free)</label>
+      <p class="input-hint">Required to analyze food. Your key is stored locally and never shared.</p>
+      <div class="api-key-row">
+        <input type="password" id="api-key-input" placeholder="AIza..." />
+        <button class="btn btn-sm" onclick="saveApiKey()">Save</button>
+      </div>
+      <div class="status-msg" id="api-status"></div>
+      <div class="info-box">
+        Get a <strong>free</strong> API key at <strong>aistudio.google.com</strong> → Get API Key.<br>
+        Free tier: 1,500 scans/day. No credit card required.
+      </div>
+    </div>
+    <div class="settings-card">
+      <p class="card-title" style="margin-bottom:0">About FODMAP Scores</p>
+      <div style="font-size:14px;line-height:1.7;color:var(--muted)">
+        <p><strong style="color:var(--green)">1–30 (Low):</strong> Safe for most people with SIBO/IBS.</p>
+        <p><strong style="color:var(--yellow)">31–60 (Moderate):</strong> May cause mild symptoms — eat small portions.</p>
+        <p><strong style="color:var(--red)">61–100 (High):</strong> Likely to trigger SIBO/IBS symptoms — avoid or limit.</p>
+        <p style="margin-top:8px">FODMAP = Fermentable Oligosaccharides, Disaccharides, Monosaccharides And Polyols.</p>
+      </div>
+    </div>
+    <button class="btn btn-secondary" onclick="clearHistory()">Clear Scan History</button>
+  </div>
+</div>
+
+<script>
+let selectedPhotoBase64 = null;
+let currentResult = null;
+
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  const fab = document.getElementById('chat-fab');
+  if (fab) fab.style.display = (name === 'chat') ? 'none' : 'flex';
+  if (name === 'home') renderHistory();
+  if (name === 'settings') loadSettings();
+  if (name === 'photo') {
+    selectedPhotoBase64 = null;
+    document.getElementById('photo-img').style.display = 'none';
+    document.getElementById('photo-placeholder').style.display = 'flex';
+    document.getElementById('analyze-btn').disabled = true;
+    document.getElementById('file-input').value = '';
+  }
+  if (name === 'confirm') { /* pendingConfirm already set */ }
+  if (name === 'chat' && chatHistory.length === 0) initChat();
+  if (name === 'foods') renderFoods(document.getElementById('foods-search')?.value || '');
+  if (name === 'describe') {
+    document.getElementById('describe-input').value = '';
+    document.getElementById('describe-btn').disabled = true;
+    document.getElementById('describe-error').style.display = 'none';
+    document.getElementById('voice-status').style.display = 'none';
+    document.getElementById('mic-btn').textContent = '🎙️';
+    stopVoice();
+  }
+}
+
+function getApiKey() {
+  const ls = localStorage.getItem('fodmap_api_key');
+  if (ls) return ls;
+  const match = document.cookie.match(/(?:^|;\s*)fodmap_key=([^;]+)/);
+  return match ? decodeURIComponent(match[1]) : '';
+}
+function saveApiKey() {
+  const key = document.getElementById('api-key-input').value.trim();
+  if (!key.startsWith('AIza')) { showStatus('error', 'Invalid key format. Gemini keys start with AIza...'); return; }
+  localStorage.setItem('fodmap_api_key', key);
+  const expires = new Date(Date.now() + 365*24*60*60*1000).toUTCString();
+  document.cookie = `fodmap_key=${encodeURIComponent(key)};expires=${expires};path=/;SameSite=Strict`;
+  showStatus('success', 'API key saved!');
+}
+function loadSettings() {
+  const key = getApiKey();
+  if (key) document.getElementById('api-key-input').value = key;
+  document.getElementById('api-status').className = 'status-msg';
+}
+function showStatus(type, msg) {
+  const el = document.getElementById('api-status');
+  el.className = 'status-msg ' + type; el.textContent = msg;
+}
+
+function getHistory() { try { return JSON.parse(localStorage.getItem('fodmap_history') || '[]'); } catch { return []; } }
+function addToHistory(result) {
+  const h = getHistory(); h.unshift({ ...result, timestamp: Date.now() });
+  if (h.length > 20) h.pop();
+  localStorage.setItem('fodmap_history', JSON.stringify(h));
+}
+function clearHistory() { if (confirm('Clear all scan history?')) { localStorage.removeItem('fodmap_history'); renderHistory(); } }
+function renderHistory() {
+  const list = document.getElementById('history-list');
+  const history = getHistory();
+  if (!history.length) { list.innerHTML = `<div class="empty-state"><div class="icon">🍽️</div><p>No scans yet. Start by photographing a meal.</p></div>`; return; }
+  list.innerHTML = history.map((item, i) => {
+    const sc = item.score <= 30 ? 'score-low' : item.score <= 60 ? 'score-mid' : 'score-high';
+    return `<div class="history-item" onclick="showResult(${i})"><div class="score-badge ${sc}">${item.score}</div><div class="history-info"><div class="history-name">${escHtml(item.name)}</div><div class="history-meta">${escHtml(item.verdict)} · ${timeAgo(item.timestamp)}</div></div></div>`;
+  }).join('');
+}
+function showResult(i) { const h = getHistory(); if (h[i]) { currentResult = h[i]; renderResults(h[i]); showScreen('results'); } }
+function timeAgo(ts) {
+  const s = Math.floor((Date.now()-ts)/1000);
+  if (s<60) return 'just now'; if (s<3600) return Math.floor(s/60)+'m ago';
+  if (s<86400) return Math.floor(s/3600)+'h ago'; return Math.floor(s/86400)+'d ago';
+}
+function escHtml(str) { return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+let recognition = null;
+function toggleVoice() {
+  if (recognition) { stopVoice(); return; }
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { const e = document.getElementById('describe-error'); e.style.display='block'; e.textContent='Voice not supported on this browser. Please type instead.'; return; }
+  recognition = new SR(); recognition.lang = 'en-GB'; recognition.continuous = true; recognition.interimResults = true;
+  const existing = document.getElementById('describe-input').value;
+  recognition.onresult = (event) => {
+    let interim='', final=existing;
+    for (let i=event.resultIndex;i<event.results.length;i++) {
+      if (event.results[i].isFinal) final += event.results[i][0].transcript+' ';
+      else interim += event.results[i][0].transcript;
+    }
+    document.getElementById('describe-input').value = final+interim;
+    document.getElementById('describe-btn').disabled = !final.trim()&&!interim.trim();
+  };
+  recognition.onerror = () => stopVoice(); recognition.onend = () => stopVoice(); recognition.start();
+  document.getElementById('mic-btn').textContent = '⏹️';
+  document.getElementById('voice-status').style.display = 'block';
+}
+function stopVoice() {
+  if (recognition) { try { recognition.stop(); } catch {} recognition = null; }
+  document.getElementById('mic-btn').textContent = '🎙️';
+  document.getElementById('voice-status').style.display = 'none';
+}
+async function describeMeal() {
+  const errEl = document.getElementById('describe-error'); errEl.style.display='none'; stopVoice();
+  if (!checkApiKey('describe-error')) return;
+  const text = document.getElementById('describe-input').value.trim(); if (!text) return;
+  showLoading('Analyzing your meal...','Checking FODMAP content');
+  try { const r = await analyzeFodmapFromText(text); hideLoading(); showConfirmScreen(r,{type:'text',text}); }
+  catch(err) { hideLoading(); showError(document.getElementById('describe-error'),err,describeMeal); }
+}
+async function analyzeFodmapFromText(text, clarificationAnswers=null) {
+  let msg = `Analyze this meal description for FODMAP content:\n\n"${text}"`;
+  if (clarificationAnswers) msg += `\n\nClarifications provided: ${clarificationAnswers}`;
+  msg += `\n\nProvide a comprehensive FODMAP score, SIBO-specific advice, and ingredient swap suggestions.`;
+  return await callGemini(msg, null, text.slice(0,40), null);
+}
+function handlePhotoSelected(event) {
+  const file = event.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const dataUrl = e.target.result; selectedPhotoBase64 = dataUrl.split(',')[1];
+    const img = document.getElementById('photo-img'); img.src = dataUrl; img.style.display = 'block';
+    document.getElementById('photo-placeholder').style.display = 'none';
+    document.getElementById('analyze-btn').disabled = false;
+  };
+  reader.readAsDataURL(file);
+}
+async function analyzePhoto() {
+  const errEl = document.getElementById('photo-error'); errEl.style.display='none';
+  if (!checkApiKey('photo-error')) return;
+  if (!selectedPhotoBase64) { errEl.style.display='block'; errEl.textContent='Please select a photo first.'; return; }
+  showLoading('Identifying food...','Claude is analyzing your meal photo');
+  try { const r = await analyzeFodmapFromImage(selectedPhotoBase64); hideLoading(); showConfirmScreen(r,{type:'photo',imageBase64:selectedPhotoBase64}); }
+  catch(err) { hideLoading(); showError(errEl,err,analyzePhoto); }
+}
+
+const SYSTEM_PROMPT = `You are a clinical FODMAP and SIBO (Small Intestinal Bacterial Overgrowth) dietary expert. Analyze food items and return a structured JSON response.
+
+FODMAP Score Guidelines (1-100):
+- 1-30: Low FODMAP — generally safe for SIBO/IBS patients
+- 31-60: Moderate FODMAP — may cause mild symptoms, portion size matters
+- 61-100: High FODMAP — likely to trigger significant SIBO/IBS symptoms
+
+FODMAP Categories to assess:
+- Fructans (wheat, onion, garlic, rye, barley, artichoke, asparagus, leek)
+- GOS/Galactooligosaccharides (legumes, lentils, chickpeas, most beans)
+- Lactose (milk, soft cheese, ice cream, yogurt)
+- Excess Fructose (honey, apple, pear, mango, high-fructose corn syrup, agave)
+- Polyols/Sugar Alcohols (stone fruits, avocado, mushrooms, cauliflower, sorbitol, mannitol, xylitol)
+
+CLARIFICATIONS: If any ingredient is ambiguous and the type significantly affects the FODMAP score (e.g. "yoghurt" could be dairy or plant-based, "milk" could be dairy or oat/soy/almond, "cheese" could be hard or soft), set needsClarification to true and list questions with 3-5 short option labels each. Only ask if it genuinely changes the score. Max 3 questions.
+
+SWAPS: For every high-FODMAP ingredient (score contribution is significant), suggest a practical low-FODMAP swap that works in the same dish. Be specific and realistic.
+
+Return ONLY valid JSON in this exact format:
+{
+  "name": "Food name",
+  "score": 45,
+  "verdict": "Moderate FODMAP",
+  "verdictLevel": "caution",
+  "categories": { "Fructans": true, "GOS": false, "Lactose": false, "ExcessFructose": true, "Polyols": false },
+  "needsClarification": false,
+  "clarifications": [{ "id": "yoghurt_type", "question": "What type of yoghurt is this?", "options": ["Dairy yoghurt", "Soy yoghurt", "Almond yoghurt", "Coconut yoghurt"] }],
+  "siboAdvice": "Detailed advice for SIBO patients about this food, serving size recommendations, and any preparation tips that reduce FODMAPs.",
+  "servingNote": "Safe serving size note if applicable",
+  "highFodmapIngredients": ["ingredient1", "ingredient2"],
+  "swaps": [{ "original": "mango", "swap": "blueberries", "reason": "Blueberries are low FODMAP and bring similar sweetness to the dish" }],
+  "confidence": "high"
+}
+verdictLevel must be: "safe" (1-30), "caution" (31-60), or "danger" (61-100)
+If needsClarification is false, clarifications must be an empty array.
+If there are no high-FODMAP swaps to suggest, swaps must be an empty array.`;
+
+let pendingContext = null;
+async function analyzeFodmapFromIngredients(name,brand,ingredients,nutriments,clarificationAnswers=null) {
+  let msg=`Analyze this food product for FODMAP content:\n\nProduct: ${name}${brand?' by '+brand:''}\nIngredients: ${ingredients||'Not available'}`;
+  if (nutriments.sugars_100g) msg+=`\nSugars per 100g: ${nutriments.sugars_100g}g`;
+  if (nutriments.fiber_100g)  msg+=`\nFiber per 100g: ${nutriments.fiber_100g}g`;
+  if (clarificationAnswers) msg+=`\n\nClarifications provided: ${clarificationAnswers}`;
+  msg+=`\n\nProvide a comprehensive FODMAP score, SIBO-specific advice, and ingredient swap suggestions.`;
+  return await callGemini(msg,null,name,brand);
+}
+async function analyzeFodmapFromImage(base64Image,clarificationAnswers=null) {
+  let msg=`Analyze this meal/food photo for FODMAP content. Identify all visible food items, estimate portions, and provide a comprehensive FODMAP score considering the full meal as presented.`;
+  if (clarificationAnswers) msg+=`\n\nClarifications provided: ${clarificationAnswers}`;
+  return await callGemini(msg,base64Image,null,null);
+}
+// ── Confirm Food Screen ────────────────────────────────────────
+let pendingConfirm = null;
+
+const FOOD_EMOJIS = {
+  polenta:'🌽', gnocchi:'🥔', pasta:'🍝', rice:'🍚', chicken:'🍗', salmon:'🐟',
+  salad:'🥗', pizza:'🍕', soup:'🍲', burger:'🍔', steak:'🥩', eggs:'🍳',
+  yogurt:'🥛', yoghurt:'🥛', cheese:'🧀', bread:'🍞', avocado:'🥑',
+  broccoli:'🥦', tofu:'🫘', sushi:'🍣', wrap:'🌯', sandwich:'🥪',
+  smoothie:'🥤', oats:'🌾', porridge:'🌾', pancakes:'🥞', waffle:'🧇'
+};
+
+function guessEmoji(name) {
+  if (!name) return '🍽️';
+  const lower = name.toLowerCase();
+  for (const [k, v] of Object.entries(FOOD_EMOJIS)) { if (lower.includes(k)) return v; }
+  return '🍽️';
+}
+
+function showConfirmScreen(result, context) {
+  pendingConfirm = { result, context };
+  document.getElementById('confirm-food-name').textContent = result.name || 'Unknown food';
+  document.getElementById('confirm-emoji').textContent = guessEmoji(result.name);
+  document.getElementById('confirm-edit-input').value = result.name || '';
+  document.getElementById('confirm-edit-box').style.display = 'none';
+  document.getElementById('confirm-edit-btn').style.display = '';
+  document.getElementById('confirm-error').style.display = 'none';
+  showScreen('confirm');
+}
+
+function confirmFoodCorrect() {
+  if (!pendingConfirm) return;
+  handleAnalysisResult(pendingConfirm.result, pendingConfirm.context);
+}
+
+function showEditFoodName() {
+  document.getElementById('confirm-edit-box').style.display = 'flex';
+  document.getElementById('confirm-edit-btn').style.display = 'none';
+  setTimeout(() => document.getElementById('confirm-edit-input').focus(), 100);
+}
+
+async function reanalyzeWithCorrection() {
+  const input = document.getElementById('confirm-edit-input').value.trim();
+  if (!input) return;
+  const errEl = document.getElementById('confirm-error');
+  errEl.style.display = 'none';
+  const ctx = pendingConfirm.context;
+  showLoading('Re-analyzing...', 'Applying your correction');
+  try {
+    let result;
+    if (ctx.type === 'photo') {
+      result = await analyzeFodmapFromImage(ctx.imageBase64,
+        `Important correction: the food in this image is actually "${input}" — please re-analyze for that specific food.`);
+    } else {
+      result = await analyzeFodmapFromText(input);
+    }
+    hideLoading();
+    // Skip confirm step on re-analysis — go straight to scoring
+    handleAnalysisResult(result, { ...ctx, corrected: true });
+  } catch(err) {
+    hideLoading();
+    showError(errEl, err, reanalyzeWithCorrection);
+  }
+}
+
+function handleAnalysisResult(result,ctx) {
+  if (result.needsClarification && result.clarifications?.length) { pendingContext={...ctx,result}; showClarificationScreen(result.clarifications); }
+  else { addToHistory(result); currentResult=result; renderResults(result); showScreen('results'); }
+}
+function showClarificationScreen(clarifications) {
+  const qHTML = clarifications.map(c=>`
+    <div class="clarify-question"><h3>${escHtml(c.question)}</h3>
+    <div class="clarify-options">${[...c.options,'Unsure / Other'].map(o=>`<button class="clarify-option" onclick="selectOption(this,'${escHtml(c.id)}')">${escHtml(o)}</button>`).join('')}</div>
+    <div style="margin-top:10px"><input type="text" class="clarify-custom-input" data-question-id="${escHtml(c.id)}" placeholder="Or type the correct ingredient here..."
+      style="width:100%;padding:11px 14px;border:2px solid var(--border);border-radius:10px;font-size:14px;font-family:inherit;background:var(--bg);transition:border-color 0.15s"
+      oninput="selectCustom(this)" onfocus="selectCustom(this)" /></div></div>`).join('');
+  document.getElementById('clarify-body').innerHTML=`
+    <p class="clarify-intro">To give you an accurate FODMAP score, we need a couple of quick answers.</p>${qHTML}
+    <div id="clarify-error" style="display:none;background:rgba(122,27,46,0.07);border:1px solid rgba(122,27,46,0.22);border-radius:10px;padding:12px;font-size:13px;color:#7A1B2E;text-align:center"></div>
+    <button class="btn" onclick="submitClarifications()">Get My Score</button>
+    <button class="btn btn-secondary" onclick="showScreen('home')">Cancel</button>`;
+  showScreen('clarify');
+}
+function selectOption(btn,questionId) {
+  btn.closest('.clarify-options').querySelectorAll('.clarify-option').forEach(b=>b.classList.remove('selected')); btn.classList.add('selected');
+  const q=btn.closest('.clarify-question'); if(q) q.querySelector('.clarify-custom-input').value='';
+}
+function selectCustom(input) {
+  const q=input.closest('.clarify-question'); if(q) q.querySelectorAll('.clarify-option').forEach(b=>b.classList.remove('selected'));
+  input.style.borderColor=input.value.trim()?'var(--accent)':'var(--border)';
+}
+async function submitClarifications() {
+  const questions=document.querySelectorAll('.clarify-question'), parts=[];
+  for (const q of questions) {
+    const id=q.querySelector('.clarify-custom-input').dataset.questionId;
+    const custom=q.querySelector('.clarify-custom-input').value.trim();
+    const sel=q.querySelector('.clarify-option.selected');
+    if (custom) parts.push(`${id}: ${custom}`);
+    else if (sel) parts.push(`${id}: ${sel.textContent.trim()}`);
+    else { const e=document.getElementById('clarify-error'); e.style.display='block'; e.textContent='Please answer all questions before continuing.'; return; }
+  }
+  showLoading('Refining your score...','Applying your answers');
+  try {
+    const ctx=pendingContext; let r;
+    if (ctx.type==='photo') r=await analyzeFodmapFromImage(ctx.imageBase64,parts.join(', '));
+    else if (ctx.type==='text') r=await analyzeFodmapFromText(ctx.text,parts.join(', '));
+    else r=await analyzeFodmapFromIngredients(ctx.name,ctx.brand,ctx.ingredients,ctx.nutriments,parts.join(', '));
+    hideLoading(); addToHistory(r); currentResult=r; renderResults(r); showScreen('results');
+  } catch(err) { hideLoading(); showError(document.getElementById('clarify-error'),err,submitClarifications); }
+}
+
+async function callGemini(userMsg,imageBase64,fallbackName,fallbackBrand) {
+  const apiKey=getApiKey(), parts=[];
+  if (imageBase64) parts.push({inline_data:{mime_type:'image/jpeg',data:imageBase64}});
+  parts.push({text:userMsg});
+  const response=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`,{
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({system_instruction:{parts:[{text:SYSTEM_PROMPT}]},contents:[{parts}],generationConfig:{maxOutputTokens:1024,temperature:0.2}})
+  });
+  if (!response.ok) { const e=await response.json().catch(()=>({})); throw new Error(e.error?.message||`API error ${response.status}`); }
+  const data=await response.json();
+  const rawText=data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+  if (!rawText) throw new Error('Empty response from Gemini');
+  const m=rawText.match(/\{[\s\S]*\}/); if (!m) throw new Error('Invalid response format');
+  const result=JSON.parse(m[0]);
+  if (!result.name&&fallbackName) result.name=fallbackName;
+  if (!result.brand&&fallbackBrand) result.brand=fallbackBrand;
+  result.score=Math.max(1,Math.min(100,Math.round(result.score)));
+  return result;
+}
+
+function renderResults(result) {
+  const s=result.score, sc=s<=30?'score-low':s<=60?'score-mid':'score-high', cc=s<=30?'score-circle-low':s<=60?'score-circle-mid':'score-circle-high';
+  const cats=result.categories||{}, catNames={Fructans:'Fructans',GOS:'GOS',Lactose:'Lactose',ExcessFructose:'Excess Fructose',Polyols:'Polyols'};
+  const catIcons={Fructans:'🌾',GOS:'🫘',Lactose:'🥛',ExcessFructose:'🍯',Polyols:'🍒'};
+  const catHTML=Object.entries(catNames).map(([k,l])=>`<div class="fodmap-tag ${cats[k]?'present':'absent'}">${catIcons[k]} ${l} ${cats[k]?'⚠️':'✓'}</div>`).join('');
+  const hi=result.highFodmapIngredients||[];
+  document.getElementById('results-body').innerHTML=`
+    <div class="result-card score-section">
+      <div class="food-name">${escHtml(result.name||'Food Item')}</div>
+      ${result.brand?`<div class="food-brand">${escHtml(result.brand)}</div>`:''}
+      <div style="margin:20px 0 8px"><div class="score-circle ${cc}"><div class="score-number">${s}</div><div class="score-label">/ 100</div></div></div>
+      <div class="gauge-bar"><div class="gauge-needle" style="left:${Math.min(96,Math.max(4,s))}%"></div></div>
+      <div class="gauge-labels"><span style="color:var(--green)">Low</span><span style="color:var(--yellow)">Moderate</span><span style="color:var(--red)">High</span></div>
+      <div class="score-verdict ${result.verdictLevel||(s<=30?'safe':s<=60?'caution':'danger')}">${escHtml(result.verdict||(s<=30?'Low FODMAP ✓':s<=60?'Moderate FODMAP ⚠️':'High FODMAP ✗'))}</div>
+    </div>
+    <div class="result-card"><div class="card-title">FODMAP Categories</div><div class="fodmap-grid">${catHTML}</div>
+    ${hi.length?`<p style="font-size:12px;color:var(--muted);margin-top:10px">High FODMAP ingredients: <strong>${hi.map(escHtml).join(', ')}</strong></p>`:''}</div>
+    ${result.swaps?.length?`<div class="result-card"><div class="card-title">Smarter Swaps</div>${result.swaps.map(sw=>`<div class="swap-item"><div class="swap-arrow">🔄</div><div class="swap-text"><div class="swap-from">${escHtml(sw.original)}</div><div class="swap-to">→ ${escHtml(sw.swap)}</div><div class="swap-reason">${escHtml(sw.reason)}</div></div></div>`).join('')}</div>`:''}
+    ${result.servingNote?`<div class="serving-note">⚖️ <strong>Serving tip:</strong> ${escHtml(result.servingNote)}</div>`:''}
+    <div class="result-card"><div class="card-title">SIBO Advice</div><div class="sibo-advice">${escHtml(result.siboAdvice||'No specific advice available.')}</div></div>
+    <div style="display:flex;gap:12px;margin-top:4px">
+      <button class="btn" style="flex:1" onclick="showScreen('photo')">📷 Scan Again</button>
+      <button class="btn" style="flex:1" onclick="showScreen('describe')">✏️ Describe</button>
+    </div>
+    <button class="btn btn-secondary" onclick="showScreen('home')" style="margin-top:0">← Home</button>`;
+}
+
+function showError(errEl,err,retryFn) {
+  if (!errEl) return;
+  const msg=err.message||'', m=msg.match(/retry in ([\d.]+)s/i);
+  if (m) {
+    let secs=Math.ceil(parseFloat(m[1])); errEl.style.display='block';
+    const tick=()=>{ errEl.textContent=`Too many requests — retrying in ${secs}s...`; if(secs<=0){errEl.style.display='none';retryFn();return;} secs--; setTimeout(tick,1000); }; tick();
+  } else if (msg.includes('quota')||msg.includes('rate')||msg.includes('429')) { errEl.style.display='block'; errEl.textContent='Too many requests — please wait a moment and try again.'; }
+  else if (msg.includes('API key')||msg.includes('invalid')||msg.includes('401')) { errEl.style.display='block'; errEl.innerHTML='Invalid API key. <a href="#" onclick="showScreen(\'settings\');return false;" style="color:#7A1B2E;font-weight:600">Open Settings</a> to update it.'; }
+  else if (msg.length<120&&!msg.includes('googleapis')&&!msg.includes('http')) { errEl.style.display='block'; errEl.textContent=msg; }
+  else { errEl.style.display='block'; errEl.textContent='Something went wrong — please try again.'; }
+}
+
+// ── Safe Foods Data ───────────────────────────────────────────
+const FOOD_DATA = [
+  { id:'vegetables', emoji:'🥦', name:'Vegetables', color:'#E8F3E8',
+    safe:['Alfalfa sprouts','Arugula','Bamboo shoots (canned, rinsed)','Bell peppers (red/green/yellow)','Bok choy','Broccoli stalks','Broccoli heads (½ cup)','Butter lettuce','Cabbage (common)','Cabbage (red)','Carrots','Chives (green)','Collard greens','Corn (½ cob)','Cucumber','Eggplant','Endive','Fennel bulb (½ cup)','Ginger','Green beans','Iceberg lettuce','Kale','Leek leaves (green part)','Olives','Oyster mushrooms (small)','Parsnips','Potatoes (white/red)','Pumpkin (½ cup)','Radishes','Romaine lettuce','Scallions (green part only)','Spinach','Squash (pattypan)','Squash (spaghetti)','Swiss chard','Tomatoes (roma/cherry/common)','Water chestnuts','Zucchini'],
+    avoid:['Artichoke (globe)','Artichoke (Jerusalem)','Asparagus','Beets (large)','Brussels sprouts','Cabbage (savoy)','Cauliflower','Celery','Garlic (clove)','Garlic powder','Garlic salt','Leek bulb','Mushrooms (button)','Mushrooms (portobello)','Mushrooms (shiitake)','Onions (red/white/yellow)','Scallions (white part)','Shallots','Sweet potato (large serve)','Squash (butternut, large)'] },
+
+  { id:'fruits', emoji:'🍓', name:'Fruits', color:'#FDEAEA',
+    safe:['Avocado (⅛ fruit / 30g)','Bananas (firm/unripe)','Blueberries (¼ cup)','Cantaloupe (small serve)','Clementines','Dragonfruit','Grapes','Grapefruit','Kiwi','Lemons','Limes','Oranges','Papaya','Passionfruit (small)','Pineapple','Pomegranate seeds (small)','Raspberries (¼ cup)','Rhubarb','Strawberries'],
+    avoid:['Apples','Apricots','Avocado (large)','Bananas (very ripe)','Blackberries (large)','Cherries','Coconut water (large)','Dates','Figs','Guava','Honeydew melon','Lychee','Mangoes','Nectarines','Peaches','Pears','Plums','Prunes','Watermelon'] },
+
+  { id:'grains', emoji:'🌾', name:'Grains & Carbs', color:'#FDF3E3',
+    safe:['Amaranth','Arrowroot','Basmati rice','Brown rice','Buckwheat','Cassava','Corn tortillas','Cornmeal / polenta','Crackers (rice)','Gluten-free bagels','Gluten-free bread','Gluten-free crackers','Gluten-free pasta','Gluten-free waffles/pancakes','Jasmine rice','Millet','Oats rolled (½ cup)','Oats steel-cut (½ cup)','Potato gnocchi (GF)','Quinoa','Quinoa pasta','Rice cakes','Rice noodles (vermicelli)','Rice pasta','Sago','Sorghum','Sourdough bread (1 slice)','Taco shells (corn)','Tapioca','Taro','White rice','Wild rice'],
+    avoid:['Bagels (wheat)','Barley','Breadcrumbs (panko/wheat)','Bulgur','Chickpea/lentil pasta (large)','Cornflakes','Couscous','Croissants','Egg noodles','Granola (honey-sweetened)','Muesli (with wheat)','Multigrain/whole wheat bread','Oat bran (large)','Pasta (wheat)','Pastries','Phyllo dough','Pita bread','Pizza crust (standard)','Pretzels','Rye','Rye bread','Semolina','Spelt','Taco shells (wheat)','Udon noodles','Waffles/pancakes (standard wheat)','Wheat bran','Wheat bread (standard)','Wheat germ','White bread (standard)'] },
+
+  { id:'proteins', emoji:'🥩', name:'Proteins', color:'#FAE9E6',
+    safe:['Beef','Chicken','Cod','Crab','Eggs','Firm tofu','Lamb','Mussels','Pork','Salmon','Shrimp','Tempeh','Tuna','Turkey'],
+    avoid:['Marinated meats (garlic/onion)','Processed sausages (check ingredients)','Silken tofu (large serve)'] },
+
+  { id:'dairy', emoji:'🥛', name:'Dairy & Milks', color:'#E8F0F8',
+    safe:['Almond milk (unsweetened)','Brie','Butter','Camembert','Cheddar cheese','Feta (small serve)','Greek yogurt (2 tbsp)','Lactose-free milk','Lactose-free yogurt','Oat milk (small ½ cup)','Parmesan','Rice milk','Soy milk (hulled/soy protein based)'],
+    avoid:['Canned coconut milk (large)','Condensed milk','Cottage cheese','Cow\'s milk','Cream','Custard','Goat\'s milk','Ice cream (dairy)','Regular yogurt','Ricotta (large serve)','Sheep\'s milk','Soy milk (whole bean)'] },
+
+  { id:'nuts', emoji:'🥜', name:'Nuts & Seeds', color:'#F5EDE3',
+    safe:['Almonds (max 10)','Brazil nuts','Chestnuts','Chia seeds','Flaxseeds','Hazelnuts (max 10)','Macadamia nuts','Peanuts','Pecans (10 halves)','Pine nuts (1 tbsp)','Pumpkin seeds','Sesame seeds (1 tbsp)','Sunflower seeds','Walnuts (10 halves)'],
+    avoid:['Cashews (large serve)','Pistachios (large serve)'] },
+
+  { id:'sweeteners', emoji:'🍯', name:'Sweeteners', color:'#FDF8E3',
+    safe:['Aspartame','Erythritol','Maple syrup (2 tbsp max)','Saccharin','Stevia','Sucralose','White sugar (small amounts)'],
+    avoid:['Agave','Chicory root / inulin','Honey (large)','Isomalt','Maltitol','Mannitol','Molasses','Sorbitol','Xylitol'] },
+
+  { id:'desserts', emoji:'🍫', name:'Desserts & Sweets', color:'#FDE8F0',
+    safe:['Brownies (GF/almond flour)','Coconut macaroons (sugar-based)','Dark chocolate 70%+ (30g max)','Gelatin desserts / jello','Gummy candies (no sorbitol/xylitol)','Hard candies (check for polyols)','Ice cream (coconut or almond-based)','Meringues','Pavlova','Rice pudding (lactose-free milk)','Sorbet (lemon or raspberry)','Tapioca pudding'],
+    avoid:['Angel food cake','Apple crisp/crumble','Baklava','Biscotti','Brownies (standard wheat)','Cheesecake','Cookies (chocolate chip/oatmeal raisin/shortbread)','Crème brûlée','Custard','Dark chocolate (large)','Doughnuts','Fruit tart (pastry shell)','Gelato','Ice cream (dairy)','Milk chocolate','Mousse (chocolate/cream)','Muffins (standard wheat)','Panna cotta','Pastries','Pie (apple/pumpkin/berry standard)','Pudding (instant/boxed)','Sugar-free gum/mints (polyols)','Trifle','Turkish delight','White chocolate'] },
+
+  { id:'condiments', emoji:'🫙', name:'Condiments & Sauces', color:'#EBF0E8',
+    safe:['Butter','Chilli oil','Fish sauce (small)','Garlic-infused oil (no garlic pieces)','Mayonnaise','Maple syrup (small)','Mustard','Olive oil','Oyster sauce (small)','Pesto (garlic-free)','Soy sauce / tamari (small)','Vinegar (all types)','Worcestershire sauce (small)'],
+    avoid:['BBQ sauce','Garlic powder','Honey (large)','Hummus (large)','Ketchup (large)','Onion powder','Relish','Store-bought marinades (check label)','Tahini (large)','Tzatziki (large)'] },
+
+  { id:'drinks', emoji:'🫖', name:'Drinks', color:'#E3F5F5',
+    safe:['Black tea','Coffee (small — 1 cup)','Cranberry juice (small)','Ginger tea','Gin','Green tea','Orange juice (small — ½ cup)','Peppermint tea','Sparkling water','Vodka','Water','White wine (small 150ml)'],
+    avoid:['Apple juice','Beer (large)','Chamomile tea','Coconut water (large)','Pear juice','Rum (large)','Sports drinks (check for sorbitol)'] }
+];
+
+let foodsFilter='all', foodsCategory='all';
+function selectFoodCat(id) {
+  foodsCategory=id; document.querySelectorAll('.cat-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelector(`.cat-tab[data-cat="${id}"]`).classList.add('active');
+  document.getElementById('foods-search').value=''; renderFoods('');
+}
+function onFoodsSearch(term) {
+  if (term) { foodsCategory='all'; document.querySelectorAll('.cat-tab').forEach(t=>t.classList.remove('active')); document.querySelector('.cat-tab[data-cat="all"]').classList.add('active'); }
+  renderFoods(term);
+}
+function setFoodFilter(type) {
+  foodsFilter=type; document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('filter-'+type).classList.add('active',type);
+  renderFoods(document.getElementById('foods-search').value);
+}
+function renderFoods(searchTerm='') {
+  const list=document.getElementById('foods-list'); if (!list) return;
+  const term=searchTerm.toLowerCase().trim();
+  const cats=foodsCategory==='all'?FOOD_DATA:FOOD_DATA.filter(c=>c.id===foodsCategory);
+  let html='';
+  for (const cat of cats) {
+    let safe=foodsFilter==='avoid'?[]:[...cat.safe], avoid=foodsFilter==='safe'?[]:[...cat.avoid];
+    if (term) { safe=safe.filter(f=>f.toLowerCase().includes(term)); avoid=avoid.filter(f=>f.toLowerCase().includes(term)); }
+    if (!safe.length&&!avoid.length) continue;
+    const sH=safe.length?`<div><div class="food-group-label safe">✓ Safe to eat</div><div class="food-pills">${safe.map(f=>`<span class="food-pill safe">${escHtml(f)}</span>`).join('')}</div></div>`:'';
+    const aH=avoid.length?`<div><div class="food-group-label avoid">✗ Limit or avoid</div><div class="food-pills">${avoid.map(f=>`<span class="food-pill avoid">${escHtml(f)}</span>`).join('')}</div></div>`:'';
+    html+=`<div class="food-category"><div class="food-category-header"><div class="food-cat-icon-box" style="background:${cat.color}">${cat.emoji}</div><span class="food-cat-name">${cat.name}</span><span class="food-cat-count">${safe.length+avoid.length} items</span></div><div class="food-groups">${sH}${aH}</div></div>`;
+  }
+  list.innerHTML=html||`<div class="empty-state"><div class="icon">🔍</div><p>No foods found${term?` for "${escHtml(searchTerm)}"`:''}</p></div>`;
+}
+
+// ── Chat ──────────────────────────────────────────────────────
+const CHAT_SYSTEM_PROMPT=`You are a warm, practical FODMAP and gut health assistant helping people with IBS and SIBO eat safely. Keep answers concise (2-4 sentences), friendly, and specific. When asked about a food, state clearly if it's low/moderate/high FODMAP, give a safe serving size if relevant, and mention which FODMAP category causes the issue (Fructans, GOS, Lactose, Excess Fructose, or Polyols). Avoid medical diagnoses — focus on food and diet guidance only.`;
+let chatHistory=[];
+function initChat() {
+  chatHistory=[];
+  document.getElementById('chat-messages').innerHTML=`<div class="chat-bubble bot">👋 Hi! I'm your FODMAP gut health assistant. Ask me about safe foods, IBS triggers, SIBO meal ideas, or anything gut-related.</div>`;
+  document.getElementById('chat-suggestions').style.display='flex';
+  const inp=document.getElementById('chat-input'); if(inp){inp.value='';autoResizeChatInput(inp);}
+}
+function sendChatChip(btn) { document.getElementById('chat-suggestions').style.display='none'; sendChatWithText(btn.textContent.trim()); }
+function sendChatMessage() { const inp=document.getElementById('chat-input'),text=inp.value.trim(); if(!text)return; inp.value='';autoResizeChatInput(inp); document.getElementById('chat-suggestions').style.display='none'; sendChatWithText(text); }
+async function sendChatWithText(text) {
+  const msgs=document.getElementById('chat-messages');
+  if (!getApiKey()) { msgs.innerHTML+=`<div class="chat-bubble bot" style="color:var(--red)">⚙️ No API key set — <a href="#" onclick="showScreen('settings');return false;" style="color:var(--emerald);font-weight:600">open Settings</a> to add your free Gemini key.</div>`; msgs.scrollTop=msgs.scrollHeight; return; }
+  msgs.innerHTML+=`<div class="chat-bubble user">${escHtml(text)}</div>`;
+  const tid='typing-'+Date.now(); msgs.innerHTML+=`<div class="chat-bubble bot typing" id="${tid}">Thinking…</div>`;
+  msgs.scrollTop=msgs.scrollHeight; document.getElementById('chat-send-btn').disabled=true;
+  chatHistory.push({role:'user',parts:[{text}]});
+  try {
+    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${getApiKey()}`,
+      {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({system_instruction:{parts:[{text:CHAT_SYSTEM_PROMPT}]},contents:chatHistory,generationConfig:{maxOutputTokens:400,temperature:0.7}})});
+    if (!res.ok) { const e=await res.json().catch(()=>({})); throw new Error(e.error?.message||'API error'); }
+    const data=await res.json(); const reply=data.candidates?.[0]?.content?.parts?.[0]?.text?.trim()||'Sorry, no response. Try again.';
+    chatHistory.push({role:'model',parts:[{text:reply}]});
+    document.getElementById(tid).outerHTML=`<div class="chat-bubble bot">${escHtml(reply).replace(/\n/g,'<br>')}</div>`;
+  } catch(err) { document.getElementById(tid).outerHTML=`<div class="chat-bubble bot" style="color:var(--red)">Something went wrong — please try again.</div>`; }
+  document.getElementById('chat-send-btn').disabled=false; msgs.scrollTop=msgs.scrollHeight;
+}
+function autoResizeChatInput(el) { el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,100)+'px'; }
+
+function checkApiKey(errorElId) {
+  if (!getApiKey()) { if(errorElId){const el=document.getElementById(errorElId);if(el){el.style.display='block';el.innerHTML='⚙️ No API key set. <a href="#" onclick="showScreen(\'settings\');return false;" style="color:#7A1B2E;font-weight:600">Open Settings</a> to add your free Gemini API key.';}} return false; }
+  return true;
+}
+function showLoading(text,sub) { document.getElementById('loading-text').textContent=text; document.getElementById('loading-sub').textContent=sub; document.getElementById('loading').classList.add('active'); }
+function hideLoading() { document.getElementById('loading').classList.remove('active'); }
+
+// ── Init ───────────────────────────────────────────────────────
+const storedKey=localStorage.getItem('fodmap_api_key');
+if (storedKey&&!storedKey.startsWith('AIza')) localStorage.removeItem('fodmap_api_key');
+const cookieMatch=document.cookie.match(/(?:^|;\s*)fodmap_key=([^;]+)/);
+if (!localStorage.getItem('fodmap_api_key')&&cookieMatch) localStorage.setItem('fodmap_api_key',decodeURIComponent(cookieMatch[1]));
+renderHistory();
+if (!getApiKey()) { showScreen('settings'); setTimeout(()=>showStatus('error','👋 Paste your free Gemini API key here to get started.'),100); }
+</script>
+</body>
+</html>
