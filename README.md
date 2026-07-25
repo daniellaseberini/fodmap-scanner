@@ -1,5 +1,11 @@
 # FODMAP Scanner
 
+<p float="left">
+  <img src="screenshots/home.png" width="260" alt="Home screen" />
+  <img src="screenshots/safe-foods.png" width="260" alt="Safe Foods Guide" />
+  <img src="screenshots/chat.png" width="260" alt="Ask FODMAP chat assistant" />
+</p>
+
 A mobile-friendly web app for scanning food (by photo or description) and getting a FODMAP score, built to help people managing IBS/low-FODMAP diets make quicker decisions about what they can eat.
 
 Built as a single-page installable web app (PWA) with an in-app chat assistant, using [Claude Code](https://claude.com/claude-code) for development.
