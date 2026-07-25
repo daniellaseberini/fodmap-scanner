@@ -1228,6 +1228,7 @@ const cookieMatch=document.cookie.match(/(?:^|;\s*)fodmap_key=([^;]+)/);
 if (!localStorage.getItem('fodmap_api_key')&&cookieMatch) localStorage.setItem('fodmap_api_key',decodeURIComponent(cookieMatch[1]));
 renderHistory();
 if (!getApiKey()) { showScreen('settings'); setTimeout(()=>showStatus('error','👋 Paste your free Gemini API key here to get started.'),100); }
+if (location.hash && document.getElementById('screen-' + location.hash.slice(1))) showScreen(location.hash.slice(1));
 </script>
 </body>
 </html>
